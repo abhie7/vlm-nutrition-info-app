@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     MONGODB_URI: str
-    API_KEY: str
-    MODEL: str = "llama-3.2-11b-vision-preview"
+    LLM_API_KEY: str
+    LLM_MODEL: str = "llama-3.2-11b-vision-preview"
     LOG_FILE: str = "logs/api_logs.jsonl"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     SECRET_KEY: str

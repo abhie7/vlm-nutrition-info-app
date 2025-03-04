@@ -1,0 +1,3 @@
+{"timestamp": "2025-03-04 07:43:35,653", "level": "ERROR", "message": "Request failed", "module": "logging_middleware", "process": 15392, "thread": 21916, "extra": {}, "function": "__call__", "line": 78}
+{"timestamp": "2025-03-04 07:44:10,026", "level": "INFO", "message": "Request processed", "module": "logging_middleware", "process": 24632, "thread": 22420, "extra": {}, "function": "__call__", "line": 68}
+{"timestamp": "2025-03-04 07:44:32,515", "level": "INFO", "message": "Request processed", "module": "logging_middleware", "process": 7916, "thread": 6192, "extra": {}, "function": "__call__", "line": 67}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
-from app.services.vlm_service import VLMService
+from app.services import vlm_service
 from datetime import datetime
 import uuid
 from app.database.image_analysis_repository import ImageAnalysisRepository
@@ -14,11 +14,10 @@ class AnalysisRequest(BaseModel):
     image_url: str
 
 
-@router.post("/analyze", dependencies=[Depends(oauth2_scheme)])
+@router.post("/analyze")
 async def analyze_image(
     request: Request,
     image_url: AnalysisRequest,
-    token: str = Depends(oauth2_scheme),
 ):
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id  # Store request_id in request state
@@ -36,7 +35,7 @@ async def analyze_image(
 
     try:
         start_time = datetime.now()
-        llm_response = await VLMService.generate_response(image_url.image_url)
+        llm_response = await vlm_service.VLMService.process_image(image_url.image_url)
 
         if not llm_response:
             request.state.logger.error(

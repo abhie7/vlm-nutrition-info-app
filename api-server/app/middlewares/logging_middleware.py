@@ -57,7 +57,6 @@ class LoggingMiddleware:
             extra_data = {
                 "method": request.method,
                 "path": request.url.path,
-                "status_code": response.status_code,
                 "response_time_ms": int(
                     (datetime.now() - request.state.start_time).total_seconds() * 1000
                 ),
