@@ -18,20 +18,20 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize logging before database
-    logging.info("[RFP Server] Initializing logging system...")
+    logging.info("[VLM-API Server] Initializing logging system...")
 
     # Initialize database
     await init_db()
-    logging.info("[RFP Server] Database connection established")
+    logging.info("[VLM-API Server] Database connection established")
 
-    # Yield control to FastAPI
+    # Yield control to FastVLM-API
     yield
 
     # Shutdown sequence
-    logging.info("[RFP Server] Shutting down RFP Server...")
+    logging.info("[VLM-API Server] Shutting down VLM-API Server...")
 
 
-logging.info("[RFP Server] Shutdown completed")
+logging.info("[VLM-API Server] Shutdown completed")
 
 
 app = FastAPI(
@@ -42,7 +42,7 @@ app = FastAPI(
 )
 
 # Configure CORS
-origins = ["*"]  # allow all origins
+origins = ["*", "http://localhost", "http://localhost:3000"]  # allow all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

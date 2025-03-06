@@ -4,7 +4,7 @@ from beanie import Document
 
 class ImageAnalysisBase(BaseModel):
     image_url: str
-    user_id: str
+    user_uuid: str
 
 
 class ImageAnalysisCreate(ImageAnalysisBase):
@@ -13,7 +13,6 @@ class ImageAnalysisCreate(ImageAnalysisBase):
 
 class ImageAnalysis(Document):
     image_url: str
-    analysis_result: dict
 
     class Settings:
         collection = "image_analysis"

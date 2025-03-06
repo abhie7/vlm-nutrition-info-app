@@ -7,7 +7,7 @@ from app.utils.get_password_hash import get_password_hash
 
 class UserRepository(BaseRepository):
     def __init__(self):
-        super().__init__("users")
+        super().__init__("User")
 
     async def create_user(self, user: UserCreate):
         hashed_password = get_password_hash(user.password)
@@ -16,4 +16,4 @@ class UserRepository(BaseRepository):
         user_dict["created_at"] = datetime.now()
 
         result = await self.insert_one(user_dict)
-        return await self.find_one({"_id": result.inserted_id})
+        return await self.find_one({"_id": result})

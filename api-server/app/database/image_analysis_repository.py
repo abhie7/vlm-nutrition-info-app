@@ -1,14 +1,14 @@
 from app.database.base_repository import BaseRepository
-from app.models.image_analysis import ImageAnalysis, ImageAnalysisCreate
+from app.models.image_analysis import ImageAnalysisCreate
 from datetime import datetime
 
 
 class ImageAnalysisRepository(BaseRepository):
     def __init__(self):
-        super().__init__("image_analyses")
+        super().__init__("nutrition_analysis")
 
     async def create_analysis(self, analysis: ImageAnalysisCreate):
-        analysis_dict = analysis.dict()
+        analysis_dict = analysis.model_dump()
         analysis_dict["status"] = "pending"
         analysis_dict["created_at"] = datetime.now()
 
@@ -26,4 +26,6 @@ class ImageAnalysisRepository(BaseRepository):
                 }
             },
         )
+
+        print(f"Analysis with ID {analysis_id} updated successfully.")
         return update_result.modified_count

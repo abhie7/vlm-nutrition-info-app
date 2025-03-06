@@ -8,7 +8,10 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    uuid: str
+    email: str
     password: str
+    display_name: str
 
 
 class User(Document):

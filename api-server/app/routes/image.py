@@ -1,82 +1,87 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+import json
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from app.services import vlm_service
 from datetime import datetime
 import uuid
 from app.database.image_analysis_repository import ImageAnalysisRepository
+import traceback
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 class AnalysisRequest(BaseModel):
+    user_uuid: str
+    food_name: str
+    meal_type: str
+    tags: list
     image_url: str
 
 
 @router.post("/analyze")
 async def analyze_image(
     request: Request,
-    image_url: AnalysisRequest,
+    payload: AnalysisRequest,
 ):
     request_id = str(uuid.uuid4())
-    request.state.request_id = request_id  # Store request_id in request state
-
-    # Log analysis start with detailed metadata
-    request.state.logger.info(
-        "Starting image analysis",
-        extra={
-            "request_id": request_id,
-            "image_url": image_url.image_url,
-            "user_id": request.state.user_id,
-            "method": "analyze_image",
-        },
-    )
 
     try:
         start_time = datetime.now()
-        llm_response = await vlm_service.VLMService.process_image(image_url.image_url)
+        llm_response = await vlm_service.get_nutrition_info(payload.image_url)
 
         if not llm_response:
-            request.state.logger.error(
-                "LLM response was empty",
-                extra={"request_id": request_id, "image_url": image_url.image_url},
-            )
             raise HTTPException(
                 status_code=503,
                 detail="Failed to generate response from LLM",
             )
 
+        nutrient_info = json.loads(llm_response["response"])
+        processing_time = round((datetime.now() - start_time).total_seconds(), 2)
+
         # Store result in database
         analysis_repo = ImageAnalysisRepository()
         await analysis_repo.insert_one(
             {
+                "user_uuid": payload.user_uuid,
+                "food_name": payload.food_name,
+                "meal_type": payload.meal_type,
                 "request_id": request_id,
-                "image_url": image_url.image_url,
-                "result": llm_response,
+                "tags": payload.tags,
+                "image_url": payload.image_url,
+                "nutrition_info": nutrient_info,
+                "token_usage": {
+                    "prompt_tokens": llm_response["prompt_tokens"],
+                    "completion_tokens": llm_response["completion_tokens"],
+                    "total_tokens": llm_response["total_tokens"],
+                },
                 "created_at": datetime.now(),
                 "status": "completed",
-                "processing_time": (datetime.now() - start_time).total_seconds(),
+                "vlm_response_time": llm_response["completion_time"],
+                "processing_time": processing_time,
             }
         )
 
-        request.state.logger.info(
-            "Analysis completed successfully",
-            extra={
-                "request_id": request_id,
-                "processing_time": (datetime.now() - start_time).total_seconds(),
+        return {
+            "user_uuid": payload.user_uuid,
+            "food_name": payload.food_name,
+            "meal_type": payload.meal_type,
+            "request_id": request_id,
+            "tags": payload.tags,
+            "image_url": payload.image_url,
+            "nutrition_info": nutrient_info,
+            "token_usage": {
+                "prompt_tokens": llm_response["prompt_tokens"],
+                "completion_tokens": llm_response["completion_tokens"],
+                "total_tokens": llm_response["total_tokens"],
             },
-        )
-
-        return {"result": llm_response}
+            "created_at": datetime.now(),
+            "status": "completed",
+            "vlm_response_time": llm_response["completion_time"],
+            "processing_time": processing_time,
+        }
 
     except Exception as e:
-        request.state.logger.error(
-            f"Analysis failed: {str(e)}",
-            extra={
-                "request_id": request_id,
-                "image_url": image_url.image_url,
-                "error_type": type(e).__name__,
-            },
-        )
+        traceback.print_exc(e)
         raise HTTPException(status_code=500, detail="Internal server error")
